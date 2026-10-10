@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Klapay族語練習 - 賽考利克泰雅語</title>
+  <style>
+    :root {
+      --primary: #9e2a2b;
+      --primary-dark: #670d10;
+      --primary-light: #c14446;
+      --accent: #d4a373;
+      --bg: #f8f6f0;
+      --card-bg: #ffffff;
+      --text: #2b2b2b;
+      --border: #e0dacf;
+      --correct: #2e7d32;
+      --wrong: #c62828;
+      --shadow: 0 4px 14px rgba(0,0,0,0.08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 12px; min-height: 100vh; }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      color: white;
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 5px;
+      background: repeating-linear-gradient(45deg, #fff, #fff 10px, var(--accent) 10px, var(--accent) 20px, var(--primary-dark) 20px, var(--primary-dark) 30px);
+    }
+    .header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    header h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; }
+    .badge { background: rgba(255,255,255,0.22); font-size: 0.85rem; padding: 4px 10px; border-radius: 20px; }
+    .sub-title { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+
+    /* Control Panel */
+    .panel {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 600px) {
+      .filter-grid { grid-template-columns: 1fr; }
+    }
+    label { font-size: 0.85rem; font-weight: 700; color: #555; display: block; margin-bottom: 4px; }
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    select:focus { border-color: var(--primary); }
+
+    /* Mode Navigation Tabs */
+    .mode-nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    @media (max-width: 640px) {
+      .mode-nav { grid-template-columns: 1fr 1fr; }
+    }
+    .tab-btn {
+      padding: 10px 8px;
+      border: 1.5px solid transparent;
+      border-radius: 8px;
+      background: #eee8de;
+      color: #444;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: #dfd7ca; }
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 3px 8px rgba(158, 42, 43, 0.35);
+    }
+
+    /* Common Card Area */
+    .content-box {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      min-height: 440px;
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+    .status-badge {
+      background: #f1ebd9;
+      color: #6a4a1f;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .action-btn-small {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* MODE 1: 翻牌遊戲 */
+    .flip-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 700px) {
+      .flip-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    }
+    @media (max-width: 450px) {
+      .flip-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    }
+    .card-slot {
+      aspect-ratio: 1;
+      perspective: 800px;
+      cursor: pointer;
+    }
+    .flip-inner {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.35s ease;
+      border-radius: 10px;
+    }
+    .card-slot.flipped .flip-inner { transform: rotateY(180deg); }
+    .card-slot.matched .flip-inner { transform: rotateY(180deg); opacity: 0.35; pointer-events: none; }
+    .face {
+      position: absolute; width: 100%; height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 6px; text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      user-select: none;
+    }
+    .face-front {
+      background: linear-gradient(135deg, #7f2224, var(--primary));
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 800;
+      border: 2px solid white;
+    }
+    .face-front::after {
+      content: "◆";
+      font-size: 0.9rem;
+      opacity: 0.6;
+      margin-top: 2px;
+    }
+    .face-back {
+      background: white;
+      border: 2px solid var(--accent);
+      transform: rotateY(180deg);
+    }
+    .tag-pill {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .tag-at { background: #e3f2fd; color: #1565c0; }
+    .tag-zh { background: #fbe9e7; color: #d84315; }
+    .card-term {
+      font-size: 0.95rem;
+      font-weight: 800;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    /* MODE 2 & 3: 選擇題 */
+    .quiz-area { max-width: 620px; margin: 0 auto; text-align: center; padding: 10px 0; }
+    .quiz-topic {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #f0e9dd;
+      font-size: 0.85rem;
+      color: #6d5b45;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .quiz-prompt { font-size: 0.95rem; color: #666; margin-bottom: 8px; }
+    .quiz-word {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 10px 0 14px;
+      min-height: 52px;
+      word-break: break-word;
+    }
+    .quiz-hint {
+      font-size: 0.88rem;
+      color: #777;
+      min-height: 20px;
+      margin-bottom: 18px;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .opt-btn {
+      padding: 15px 18px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: #fbfaf7;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #333;
+      text-align: center;
+    }
+    .opt-btn:hover:not(:disabled) {
+      background: #f0eae1;
+      border-color: #c9bea9;
+    }
+    .opt-btn.correct {
+      background: #e8f5e9 !important;
+      border-color: var(--correct) !important;
+      color: var(--correct) !important;
+    }
+    .opt-btn.wrong {
+      background: #ffebee !important;
+      border-color: var(--wrong) !important;
+      color: var(--wrong) !important;
+    }
+    .btn-next {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+      box-shadow: 0 3px 10px rgba(158,42,43,0.3);
+    }
+
+    /* MODE 4: 自測卡片 */
+    .flash-container { max-width: 520px; margin: 10px auto 0; }
+    .flashcard-box {
+      height: 300px;
+      perspective: 1000px;
+      cursor: pointer;
+      margin-bottom: 18px;
+    }
+    .flashcard-inner {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s cubic-bezier(0.2, 0.85, 0.4, 1.2);
+      border-radius: 16px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.1);
+    }
+    .flashcard-box.flipped .flashcard-inner { transform: rotateY(180deg); }
+    .fc-face {
+      position: absolute; width: 100%; height: 100%;
+      backface-visibility: hidden;
+      border-radius: 16px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 24px; text-align: center;
+      box-sizing: border-box;
+    }
+    .fc-front {
+      background: white;
+      border: 3px solid var(--primary);
+    }
+    .fc-back {
+      background: linear-gradient(135deg, var(--primary-dark), #8b263e);
+      color: white;
+      transform: rotateY(180deg);
+    }
+    .fc-tip { font-size: 0.85rem; color: #888; margin-bottom: 12px; }
+    .fc-back .fc-tip { color: #f2c9d8; }
+    .fc-main-term { font-size: 2.3rem; font-weight: 800; margin-bottom: 8px; word-break: break-word; }
+    .fc-sub-term { font-size: 1rem; color: #666; }
+    .fc-back .fc-sub-term { color: #f5e4ea; }
+    .fc-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+    .fc-btn {
+      flex: 1;
+      padding: 12px;
+      background: #555;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .fc-btn.primary { background: var(--primary); }
+
+    /* Results summary */
+    .summary-card {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .summary-card h2 { font-size: 1.8rem; color: var(--primary); margin-bottom: 12px; }
+    .score-banner {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--primary-dark);
+      margin: 15px 0 25px;
+    }
+    .replay-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(158,42,43,0.3);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>Klapay 族語練習</h1>
+        <div class="sub-title">賽考利克泰雅語 (Squliq Atayal) 單詞學習測驗 (主題 01~10，序號 1~401)</div>
+      </div>
+      <div class="badge">每次隨機 10 題</div>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="filter-grid">
+      <div>
+        <label>選擇學習主題：</label>
+        <select id="catSelect" onchange="onFilterChange()">
+          <option value="ALL">全部主題 (01~10，共 401 詞)</option>
+        </select>
+      </div>
+      <div>
+        <label>級別範圍：</label>
+        <select id="levelSelect" onchange="onFilterChange()">
+          <option value="ALL">全部級別</option>
+          <option value="初級">初級</option>
+          <option value="中級">中級</option>
+          <option value="中高級">中高級</option>
+          <option value="高級">高級</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mode-nav">
+      <button class="tab-btn active" id="tab-0" onclick="switchMode(0)">🃏 翻牌配對 (10題)</button>
+      <button class="tab-btn" id="tab-1" onclick="switchMode(1)">🗣️ 看族語說中文 (10題)</button>
+      <button class="tab-btn" id="tab-2" onclick="switchMode(2)">🔤 看中文說族語 (10題)</button>
+      <button class="tab-btn" id="tab-3" onclick="switchMode(3)">📖 朗讀翻面自測 (10題)</button>
+    </div>
+  </div>
+
+  <div class="content-box">
+    <!-- 模式 1: 翻牌練習 -->
+    <div id="mode-flip">
+      <div class="status-bar">
+        <div>
+          <span>已配對：<b id="flip-matches" style="color:var(--primary);">0</b> / 10 題</span>
+          <span style="margin-left: 14px;">翻牌次數：<b id="flip-clicks">0</b></span>
+        </div>
+        <div>
+          <button class="action-btn-small" onclick="initFlipGame()">🔄 換一組 (隨機10題)</button>
+        </div>
+      </div>
+      <div id="flip-grid" class="flip-grid"></div>
+      <div id="flip-end" class="summary-card hidden">
+        <h2>🎉 恭喜全部配對完成！</h2>
+        <p style="font-size:1.1rem; color:#555; margin-bottom:20px;">總翻牌次數：<b id="flip-final-clicks" style="color:var(--primary);">0</b> 次</p>
+        <button class="replay-btn" onclick="initFlipGame()">再玩一次 (隨機10題)</button>
+      </div>
+    </div>
+
+    <!-- 模式 2 & 3: 選擇題 -->
+    <div id="mode-quiz" class="hidden">
+      <div class="status-bar">
+        <div>
+          <span>進度：<b id="quiz-num" style="color:var(--primary);">1</b> / 10 題</span>
+          <span style="margin-left: 14px;">目前得分：<b id="quiz-score" style="color:var(--correct);">0</b> 分</span>
+        </div>
+        <div>
+          <button class="action-btn-small" onclick="startQuiz()">🔄 重新隨機出題</button>
+        </div>
+      </div>
+      
+      <div id="quiz-ongoing" class="quiz-area">
+        <div id="quiz-prompt-text" class="quiz-prompt">題目提示</div>
+        <div id="quiz-question" class="quiz-word">--</div>
+        <div id="quiz-options" class="options-grid"></div>
+        <button id="btn-next-question" class="btn-next" onclick="nextQuestion()">下一題 ➔</button>
+      </div>
+
+      <div id="quiz-result" class="summary-card hidden">
+        <h2>🎉 測驗完成！</h2>
+        <div class="score-banner" id="quiz-final-score">100 分</div>
+        <p style="color:#666; margin-bottom:24px;">每次隨機出 10 題，多加練習可以更加熟悉賽考利克泰雅語喔！</p>
+        <button class="replay-btn" onclick="startQuiz()">再測一次 (隨機10題)</button>
+      </div>
+    </div>
+
+    <!-- 模式 4: 朗讀翻面自測 -->
+    <div id="mode-flash" class="hidden">
+      <div class="status-bar">
+        <div>
+          <span>單詞：<b id="flash-num" style="color:var(--primary);">1</b> / 10 題</span>
+          <span class="status-badge" style="margin-left:10px;">點擊卡片可翻面看答案</span>
+        </div>
+        <div>
+          <button class="action-btn-small" onclick="initFlashcards()">🔄 換一組 (隨機10題)</button>
+        </div>
+      </div>
+
+      <div class="flash-container">
+        <div class="flashcard-box" id="flashcard-box" onclick="toggleFlashcard()">
+          <div class="flashcard-inner">
+            <div class="fc-face fc-front">
+              <div class="fc-tip" id="fc-front-tip">【看族語 ‧ 請試念並說出中文】</div>
+              <div class="fc-main-term" id="fc-front-word">qutux</div>
+            </div>
+            <div class="fc-face fc-back">
+              <div class="fc-tip" id="fc-back-tip">【中文涵義】</div>
+              <div class="fc-main-term" id="fc-back-word">一</div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-controls">
+          <button class="fc-btn" onclick="prevFlash()">◀ 上一題</button>
+          <button class="fc-btn primary" onclick="toggleFlashPrompt()" id="btn-fc-toggle">切換：看族語說中文</button>
+          <button class="fc-btn" onclick="nextFlash()">下一題 ▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 10 個主題 401 個單詞完整內嵌資料 (免外部檔案與外掛)
+const VOCAB_DATA = [{"id": 1, "code": "01-01", "cat": "01數字計量", "zh": "一", "at": "qutux", "rmk": "", "lvl": "初級"}, {"id": 2, "code": "01-02", "cat": "01數字計量", "zh": "二", "at": "sazing", "rmk": "", "lvl": "初級"}, {"id": 3, "code": "01-03", "cat": "01數字計量", "zh": "三", "at": "cyugal", "rmk": "ciwal", "lvl": "初級"}, {"id": 4, "code": "01-04", "cat": "01數字計量", "zh": "四", "at": "payat", "rmk": "", "lvl": "初級"}, {"id": 5, "code": "01-05", "cat": "01數字計量", "zh": "五", "at": "zmagal", "rmk": "", "lvl": "初級"}, {"id": 6, "code": "01-06", "cat": "01數字計量", "zh": "六", "at": "mtzyu", "rmk": "mtzyu’", "lvl": "初級"}, {"id": 7, "code": "01-07", "cat": "01數字計量", "zh": "七", "at": "mpitu", "rmk": "pitu’", "lvl": "初級"}, {"id": 8, "code": "01-08", "cat": "01數字計量", "zh": "八", "at": "mspat", "rmk": "spat", "lvl": "初級"}, {"id": 9, "code": "01-09", "cat": "01數字計量", "zh": "九", "at": "mqeru", "rmk": "mqeruʼ/qeru’/mqiru’", "lvl": "初級"}, {"id": 10, "code": "01-10", "cat": "01數字計量", "zh": "十", "at": "mopuw", "rmk": "mpuw/mawpu", "lvl": "初級"}, {"id": 11, "code": "01-11", "cat": "01數字計量", "zh": "十一", "at": "mopuw qutux", "rmk": "mpuw qutux/mawpu qutux", "lvl": "初級"}, {"id": 12, "code": "01-12", "cat": "01數字計量", "zh": "十二", "at": "mopuw sazing", "rmk": "mawpu sazing/mopuw saing", "lvl": "初級"}, {"id": 13, "code": "01-13", "cat": "01數字計量", "zh": "十三", "at": "mopuw cyugal", "rmk": "mpuw ciwal/mawpuw cyugal/mpuw cyugal", "lvl": "初級"}, {"id": 14, "code": "01-14", "cat": "01數字計量", "zh": "十四", "at": "mopuw payat", "rmk": "mpuw payat/mawpuw spayat", "lvl": "初級"}, {"id": 15, "code": "01-15", "cat": "01數字計量", "zh": "十五", "at": "mopuw zmagal", "rmk": "mpuw zmagal/mawpuw zmagal", "lvl": "初級"}, {"id": 16, "code": "01-16", "cat": "01數字計量", "zh": "十六", "at": "mopuw tzyu", "rmk": "mpuw tzyu’/mawpu mtzyu’", "lvl": "初級"}, {"id": 17, "code": "01-17", "cat": "01數字計量", "zh": "十七", "at": "mopuw pitu", "rmk": "mpuw pitu/mpuw mpitu/mawpu mpitu’", "lvl": "初級"}, {"id": 18, "code": "01-18", "cat": "01數字計量", "zh": "十八", "at": "mopuw spat", "rmk": "mpuw spat/mpuw mspat/mawpu mspat", "lvl": "初級"}, {"id": 19, "code": "01-19", "cat": "01數字計量", "zh": "十九", "at": "mopuw qeru", "rmk": "mpuw qeru/mpuw mqeru/mawpu mqeru’", "lvl": "初級"}, {"id": 20, "code": "01-20", "cat": "01數字計量", "zh": "二十", "at": "mpusal", "rmk": "", "lvl": "初級"}, {"id": 21, "code": "01-21", "cat": "01數字計量", "zh": "二十一", "at": "mpusal qutux", "rmk": "", "lvl": "初級"}, {"id": 22, "code": "01-22", "cat": "01數字計量", "zh": "二十二", "at": "mpusal sazing", "rmk": "", "lvl": "初級"}, {"id": 23, "code": "01-23", "cat": "01數字計量", "zh": "二十三", "at": "mpusal cyugal", "rmk": "mpusal ciwal", "lvl": "初級"}, {"id": 24, "code": "01-24", "cat": "01數字計量", "zh": "二十四", "at": "mpusal payat", "rmk": "", "lvl": "初級"}, {"id": 25, "code": "01-25", "cat": "01數字計量", "zh": "二十五", "at": "mpusal zmagal", "rmk": "", "lvl": "初級"}, {"id": 26, "code": "01-26", "cat": "01數字計量", "zh": "三十", "at": "mtzyul", "rmk": "", "lvl": "初級"}, {"id": 27, "code": "01-27", "cat": "01數字計量", "zh": "三十一", "at": "mtzyul qutux", "rmk": "", "lvl": "高級"}, {"id": 28, "code": "01-28", "cat": "01數字計量", "zh": "四十", "at": "mpatul", "rmk": "mspatul", "lvl": "初級"}, {"id": 29, "code": "01-29", "cat": "01數字計量", "zh": "五十", "at": "mzimal", "rmk": "", "lvl": "初級"}, {"id": 30, "code": "01-30", "cat": "01數字計量", "zh": "六十", "at": "mtzyu pgan", "rmk": "mtzyu’ pgan", "lvl": "初級"}, {"id": 31, "code": "01-31", "cat": "01數字計量", "zh": "七十", "at": "mpitu pgan", "rmk": "mpitu’ pgan", "lvl": "初級"}, {"id": 32, "code": "01-32", "cat": "01數字計量", "zh": "八十", "at": "mspat pgan", "rmk": "", "lvl": "初級"}, {"id": 33, "code": "01-33", "cat": "01數字計量", "zh": "九十", "at": "mqeru pgan", "rmk": "mqeru’ pgan", "lvl": "初級"}, {"id": 34, "code": "01-34", "cat": "01數字計量", "zh": "百", "at": "kbhul", "rmk": "", "lvl": "中高級"}, {"id": 35, "code": "01-35", "cat": "01數字計量", "zh": "一百", "at": "qutux kbhul", "rmk": "", "lvl": "高級"}, {"id": 36, "code": "01-36", "cat": "01數字計量", "zh": "兩百", "at": "sazing kbhul", "rmk": "", "lvl": "中級"}, {"id": 37, "code": "01-37", "cat": "01數字計量", "zh": "一千", "at": "qutux seng", "rmk": "mopuw kbhu’", "lvl": "中高級"}, {"id": 38, "code": "01-38", "cat": "01數字計量", "zh": "一些", "at": "cikay", "rmk": "cikah", "lvl": "高級"}, {"id": 39, "code": "01-39", "cat": "01數字計量", "zh": "一次", "at": "minqutux", "rmk": "mtxal/minxal", "lvl": "中高級"}, {"id": 40, "code": "01-40", "cat": "01數字計量", "zh": "一串", "at": "qutux qnapan", "rmk": "qutux qaxal", "lvl": "中高級"}, {"id": 41, "code": "01-41", "cat": "01數字計量", "zh": "種類", "at": "llamu", "rmk": "llamu’/kryanan/qutux glu", "lvl": "中高級"}, {"id": 42, "code": "01-42", "cat": "01數字計量", "zh": "一對", "at": "rrusa", "rmk": "rrusa’/mssul", "lvl": "中高級"}, {"id": 43, "code": "01-43", "cat": "01數字計量", "zh": "全部", "at": "kwara", "rmk": "kwara’", "lvl": "初級"}, {"id": 44, "code": "01-44", "cat": "01數字計量", "zh": "一點點", "at": "cipoq/cikuy", "rmk": "cikuy/cipuq", "lvl": "中高級"}, {"id": 45, "code": "01-45", "cat": "01數字計量", "zh": "一半", "at": "smka", "rmk": "smka’", "lvl": "中級"}, {"id": 46, "code": "02-01", "cat": "02代名詞、指示詞", "zh": "你", "at": "su", "rmk": "isu", "lvl": "初級"}, {"id": 47, "code": "02-02", "cat": "02代名詞、指示詞", "zh": "我", "at": "kun", "rmk": "kuzing/saku", "lvl": "初級"}, {"id": 48, "code": "02-03", "cat": "02代名詞、指示詞", "zh": "他", "at": "hiya", "rmk": "hiya’", "lvl": "初級"}, {"id": 49, "code": "02-04", "cat": "02代名詞、指示詞", "zh": "你們", "at": "simu", "rmk": "", "lvl": "初級"}, {"id": 50, "code": "02-05", "cat": "02代名詞、指示詞", "zh": "我們", "at": "ta", "rmk": "ta’/ita", "lvl": "初級"}, {"id": 51, "code": "02-06", "cat": "02代名詞、指示詞", "zh": "他們", "at": "lha", "rmk": "lha’/lhgan", "lvl": "初級"}, {"id": 52, "code": "02-07", "cat": "02代名詞、指示詞", "zh": "你們的", "at": "mamu", "rmk": "", "lvl": "初級"}, {"id": 53, "code": "02-08", "cat": "02代名詞、指示詞", "zh": "我們的", "at": "myan", "rmk": "", "lvl": "初級"}, {"id": 54, "code": "02-09", "cat": "02代名詞、指示詞", "zh": "他們的", "at": "nha", "rmk": "nha’", "lvl": "初級"}, {"id": 55, "code": "02-10", "cat": "02代名詞、指示詞", "zh": "你的", "at": "su", "rmk": "su’", "lvl": "初級"}, {"id": 56, "code": "02-11", "cat": "02代名詞、指示詞", "zh": "我的", "at": "maku", "rmk": "maku’/mu", "lvl": "初級"}, {"id": 57, "code": "02-12", "cat": "02代名詞、指示詞", "zh": "他的", "at": "nya", "rmk": "nya’", "lvl": "初級"}, {"id": 58, "code": "02-13", "cat": "02代名詞、指示詞", "zh": "我們(排除式)", "at": "sami", "rmk": "", "lvl": "高級"}, {"id": 59, "code": "02-14", "cat": "02代名詞、指示詞", "zh": "咱們(包含式)", "at": "ita", "rmk": "ita’", "lvl": "初級"}, {"id": 60, "code": "02-15", "cat": "02代名詞、指示詞", "zh": "咱們的", "at": "ta", "rmk": "ta’", "lvl": "初級"}, {"id": 61, "code": "02-16", "cat": "02代名詞、指示詞", "zh": "那個", "at": "qasa", "rmk": "", "lvl": "初級"}, {"id": 62, "code": "02-17", "cat": "02代名詞、指示詞", "zh": "這個", "at": "qani", "rmk": "", "lvl": "初級"}, {"id": 63, "code": "02-18", "cat": "02代名詞、指示詞", "zh": "這裡", "at": "sqani", "rmk": "", "lvl": "初級"}, {"id": 64, "code": "02-19", "cat": "02代名詞、指示詞", "zh": "那裡", "at": "thasa", "rmk": "tehasa/sqasa", "lvl": "初級"}, {"id": 65, "code": "02-20", "cat": "02代名詞、指示詞", "zh": "(像)這樣", "at": "miyan qani", "rmk": "miya qani", "lvl": "中高級"}, {"id": 66, "code": "03-01", "cat": "03疑問詞", "zh": "多少", "at": "pira", "rmk": "pira’", "lvl": "中級"}, {"id": 67, "code": "03-02", "cat": "03疑問詞", "zh": "什麼", "at": "nanu", "rmk": "nanu’", "lvl": "初級"}, {"id": 68, "code": "03-03", "cat": "03疑問詞", "zh": "如何", "at": "son nanu", "rmk": "sun nanu’", "lvl": "中級"}, {"id": 69, "code": "03-04", "cat": "03疑問詞", "zh": "何時(未發生)", "at": "knwan", "rmk": "", "lvl": "高級"}, {"id": 70, "code": "03-05", "cat": "03疑問詞", "zh": "誰", "at": "ima", "rmk": "ima’", "lvl": "初級"}, {"id": 71, "code": "03-06", "cat": "03疑問詞", "zh": "哪一個(物)", "at": "qenu", "rmk": "qenu’/qaynu’", "lvl": "初級"}, {"id": 72, "code": "03-07", "cat": "03疑問詞", "zh": "哪裡", "at": "inu", "rmk": "inu’", "lvl": "初級"}, {"id": 73, "code": "03-08", "cat": "03疑問詞", "zh": "是誰的", "at": "ima", "rmk": "ima’", "lvl": "高級"}, {"id": 74, "code": "03-09", "cat": "03疑問詞", "zh": "怎麼", "at": "hmswa", "rmk": "hmswa’", "lvl": "初級"}, {"id": 75, "code": "03-10", "cat": "03疑問詞", "zh": "多少(歲；物)", "at": "pira", "rmk": "pira’", "lvl": "初級"}, {"id": 76, "code": "03-11", "cat": "03疑問詞", "zh": "多少(程度大小)", "at": "pira", "rmk": "pira’/ktwa", "lvl": "初級"}, {"id": 77, "code": "03-12", "cat": "03疑問詞", "zh": "什麼地方", "at": "inu", "rmk": "inu’", "lvl": "初級"}, {"id": 78, "code": "03-13", "cat": "03疑問詞", "zh": "何時(已發生)", "at": "knwan", "rmk": "", "lvl": "初級"}, {"id": 79, "code": "03-14", "cat": "03疑問詞", "zh": "為什麼", "at": "swa", "rmk": "swa’/hmswa", "lvl": "初級"}, {"id": 80, "code": "04-01", "cat": "04親屬稱謂", "zh": "爸爸", "at": "yaba", "rmk": "yaba’", "lvl": "初級"}, {"id": 81, "code": "04-02", "cat": "04親屬稱謂", "zh": "媽媽", "at": "yaya", "rmk": "yaya’", "lvl": "初級"}, {"id": 82, "code": "04-03", "cat": "04親屬稱謂", "zh": "堂、表兄弟姐妹", "at": "rawin", "rmk": "", "lvl": "中高級"}, {"id": 83, "code": "04-04", "cat": "04親屬稱謂", "zh": "男性長輩(祖父；外公；岳父)", "at": "yutas", "rmk": "", "lvl": "初級"}, {"id": 84, "code": "04-05", "cat": "04親屬稱謂", "zh": "女性長輩(祖母；外婆；岳母)", "at": "yaki", "rmk": "yaki’", "lvl": "初級"}, {"id": 85, "code": "04-06", "cat": "04親屬稱謂", "zh": "親戚", "at": "lpyung", "rmk": "", "lvl": "中高級"}, {"id": 86, "code": "04-07", "cat": "04親屬稱謂", "zh": "配偶", "at": "bes", "rmk": "bays", "lvl": "中高級"}, {"id": 87, "code": "04-08", "cat": "04親屬稱謂", "zh": "女婿", "at": "yama", "rmk": "yama’", "lvl": "中高級"}, {"id": 88, "code": "04-09", "cat": "04親屬稱謂", "zh": "舅子", "at": "yanay", "rmk": "", "lvl": "高級"}, {"id": 89, "code": "04-10", "cat": "04親屬稱謂", "zh": "弟媳", "at": "swagi", "rmk": "swagi’", "lvl": "中高級"}, {"id": 90, "code": "04-11", "cat": "04親屬稱謂", "zh": "嫂嫂", "at": "irah", "rmk": "", "lvl": "中高級"}, {"id": 91, "code": "04-12", "cat": "04親屬稱謂", "zh": "媳婦", "at": "ina", "rmk": "ina’", "lvl": "中高級"}, {"id": 92, "code": "04-13", "cat": "04親屬稱謂", "zh": "孫子/孫女", "at": "kinbahan", "rmk": "laqi kinbahan/laqi kneril na laqi", "lvl": "中高級"}, {"id": 93, "code": "04-14", "cat": "04親屬稱謂", "zh": "夫妻", "at": "qutux tnuxan", "rmk": "msyahaw/qutux sakaw", "lvl": "中高級"}, {"id": 94, "code": "04-15", "cat": "04親屬稱謂", "zh": "丈夫", "at": "mlikuy", "rmk": "", "lvl": "高級"}, {"id": 95, "code": "04-16", "cat": "04親屬稱謂", "zh": "姻親", "at": "lpyung", "rmk": "", "lvl": "高級"}, {"id": 96, "code": "04-17", "cat": "04親屬稱謂", "zh": "兄弟姊妹", "at": "mtswe", "rmk": "mtswe’/mtaswe/pintnaqan", "lvl": "初級"}, {"id": 97, "code": "04-18", "cat": "04親屬稱謂", "zh": "兄長", "at": "qbsuyan", "rmk": "qsuyan", "lvl": "高級"}, {"id": 98, "code": "04-19", "cat": "04親屬稱謂", "zh": "(哥哥；姊姊)通稱", "at": "qbsuyan", "rmk": "qsuyan", "lvl": "高級"}, {"id": 99, "code": "04-20", "cat": "04親屬稱謂", "zh": "姊姊", "at": "qbsuyan kneril", "rmk": "qsuyan kneril", "lvl": "初級"}, {"id": 100, "code": "04-21", "cat": "04親屬稱謂", "zh": "哥哥", "at": "qbsuyan mlikuy", "rmk": "qsuyan qbsuyan mlikuy", "lvl": "初級"}, {"id": 101, "code": "04-22", "cat": "04親屬稱謂", "zh": "(弟弟；妹妹)通稱", "at": "sswe", "rmk": "sswe’", "lvl": "初級"}, {"id": 102, "code": "04-23", "cat": "04親屬稱謂", "zh": "弟弟", "at": "sswe mlikuy", "rmk": "sswe’ mlikuy", "lvl": "初級"}, {"id": 103, "code": "04-24", "cat": "04親屬稱謂", "zh": "妹妹", "at": "sswe kneril", "rmk": "sswe’ kneril", "lvl": "初級"}, {"id": 104, "code": "04-25", "cat": "04親屬稱謂", "zh": "(伯父；叔叔；舅舅)通稱", "at": "mama", "rmk": "mama’", "lvl": "初級"}, {"id": 105, "code": "04-26", "cat": "04親屬稱謂", "zh": "(伯母；嬸嬸；舅母)通稱", "at": "yata", "rmk": "yata’", "lvl": "初級"}, {"id": 106, "code": "05-01", "cat": "05人物、身分", "zh": "名字", "at": "lalu", "rmk": "lalu’", "lvl": "初級"}, {"id": 107, "code": "05-02", "cat": "05人物、身分", "zh": "男孩", "at": "laqi mlikuy", "rmk": "", "lvl": "初級"}, {"id": 108, "code": "05-03", "cat": "05人物、身分", "zh": "女孩", "at": "laqi kneril", "rmk": "", "lvl": "初級"}, {"id": 109, "code": "05-04", "cat": "05人物、身分", "zh": "朋友", "at": "rangi", "rmk": "rangi’", "lvl": "初級"}, {"id": 110, "code": "05-05", "cat": "05人物、身分", "zh": "孩童", "at": "laqi", "rmk": "laqi/’laqi", "lvl": "初級"}, {"id": 111, "code": "05-06", "cat": "05人物、身分", "zh": "老人家", "at": "bnkis", "rmk": "nbkis", "lvl": "初級"}, {"id": 112, "code": "05-07", "cat": "05人物、身分", "zh": "女性", "at": "kneril", "rmk": "", "lvl": "初級"}, {"id": 113, "code": "05-08", "cat": "05人物、身分", "zh": "男性", "at": "mlikuy", "rmk": "", "lvl": "初級"}, {"id": 114, "code": "05-09", "cat": "05人物、身分", "zh": "人", "at": "tayal/squliq", "rmk": "Tayal/squliq", "lvl": "初級"}, {"id": 115, "code": "05-10", "cat": "05人物、身分", "zh": "醫生", "at": "sinsiy pbetaqʼ", "rmk": "sinsiy phgup/sinsi pbetaq/sinsi pbeta/sinsiny pqniqan iyu /sinsang", "lvl": "初級"}, {"id": 116, "code": "05-11", "cat": "05人物、身分", "zh": "老師", "at": "sinsiy pcbaq biruʼ", "rmk": "sinsiy pcbaq biru/sinsi pcbaq biru’", "lvl": "初級"}, {"id": 117, "code": "05-12", "cat": "05人物、身分", "zh": "敵人", "at": "paris", "rmk": "", "lvl": "中高級"}, {"id": 118, "code": "05-13", "cat": "05人物、身分", "zh": "長官", "at": "mrhuw", "rmk": "thoki", "lvl": "高級"}, {"id": 119, "code": "05-14", "cat": "05人物、身分", "zh": "流氓", "at": "loman", "rmk": "rama(日語借詞)/luman另作 lomwa", "lvl": "高級"}, {"id": 120, "code": "05-15", "cat": "05人物、身分", "zh": "警察", "at": "kinsat", "rmk": "kshat", "lvl": "高級"}, {"id": 121, "code": "05-16", "cat": "05人物、身分", "zh": "平埔族", "at": "Kbzyan", "rmk": "khabu/pinpozoku/khabu’/Panat平埔族的統稱", "lvl": "中高級"}, {"id": 122, "code": "05-17", "cat": "05人物、身分", "zh": "客家人", "at": "khelang", "rmk": "ngayngay/paymukan/ kuri", "lvl": "高級"}, {"id": 123, "code": "05-18", "cat": "05人物、身分", "zh": "校長", "at": "kocyo", "rmk": "mrhuw pqwasan", "lvl": "中級"}, {"id": 124, "code": "05-19", "cat": "05人物、身分", "zh": "閩南人", "at": "Kmukan/Kahat", "rmk": "iyung/sehu/yung/hulu’", "lvl": "中級"}, {"id": 125, "code": "05-20", "cat": "05人物、身分", "zh": "青年", "at": "mrkyas", "rmk": "", "lvl": "高級"}, {"id": 126, "code": "05-21", "cat": "05人物、身分", "zh": "神父", "at": "sinxu", "rmk": "sinxu’/sinbu’", "lvl": "高級"}, {"id": 127, "code": "05-22", "cat": "05人物、身分", "zh": "修女", "at": "syuni", "rmk": "syuni’", "lvl": "中高級"}, {"id": 128, "code": "05-23", "cat": "05人物、身分", "zh": "外省人", "at": "theluw", "rmk": "thaylu", "lvl": "中高級"}, {"id": 129, "code": "05-24", "cat": "05人物、身分", "zh": "小姐", "at": "mkrakis", "rmk": "krakis", "lvl": "初級"}, {"id": 130, "code": "05-25", "cat": "05人物、身分", "zh": "學生", "at": "seto", "rmk": "seto’", "lvl": "初級"}, {"id": 131, "code": "06-01", "cat": "06身體部位", "zh": "耳朵", "at": "papak", "rmk": "", "lvl": "初級"}, {"id": 132, "code": "06-02", "cat": "06身體部位", "zh": "大腿", "at": "muzi", "rmk": "gaya’(大腿內側) muzi’/ kayt(大腿外側)", "lvl": "初級"}, {"id": 133, "code": "06-03", "cat": "06身體部位", "zh": "眼睛", "at": "roziq", "rmk": "rawziq", "lvl": "初級"}, {"id": 134, "code": "06-04", "cat": "06身體部位", "zh": "臉", "at": "rqyas", "rmk": "rqis", "lvl": "初級"}, {"id": 135, "code": "06-05", "cat": "06身體部位", "zh": "嘴巴", "at": "nqwaq", "rmk": "ngqwaq", "lvl": "初級"}, {"id": 136, "code": "06-06", "cat": "06身體部位", "zh": "頭", "at": "tunux", "rmk": "", "lvl": "初級"}, {"id": 137, "code": "06-07", "cat": "06身體部位", "zh": "指甲", "at": "kamit", "rmk": "", "lvl": "初級"}, {"id": 138, "code": "06-08", "cat": "06身體部位", "zh": "手", "at": "qba", "rmk": "qba’", "lvl": "初級"}, {"id": 139, "code": "06-09", "cat": "06身體部位", "zh": "身體", "at": "hi", "rmk": "hi’/he", "lvl": "初級"}, {"id": 140, "code": "06-10", "cat": "06身體部位", "zh": "鼻子", "at": "nguhuw", "rmk": "nguhu", "lvl": "初級"}, {"id": 141, "code": "06-11", "cat": "06身體部位", "zh": "腳", "at": "kakay", "rmk": "", "lvl": "初級"}, {"id": 142, "code": "06-12", "cat": "06身體部位", "zh": "牙齒", "at": "gʼnux", "rmk": "nux/’ nux/gipun", "lvl": "高級"}, {"id": 143, "code": "06-13", "cat": "06身體部位", "zh": "頭髮", "at": "snonux", "rmk": "snawnux", "lvl": "高級"}, {"id": 144, "code": "06-14", "cat": "06身體部位", "zh": "血", "at": "ramu", "rmk": "ramu’", "lvl": "中級"}, {"id": 145, "code": "06-15", "cat": "06身體部位", "zh": "肉；身體", "at": "hi", "rmk": "hi’/syam", "lvl": "中級"}, {"id": 146, "code": "06-16", "cat": "06身體部位", "zh": "額頭", "at": "lihuy", "rmk": "", "lvl": "中級"}, {"id": 147, "code": "06-17", "cat": "06身體部位", "zh": "肚子", "at": "ktu", "rmk": "ktu’", "lvl": "中級"}, {"id": 148, "code": "06-18", "cat": "06身體部位", "zh": "乳房", "at": "bubu", "rmk": "bubu’", "lvl": "高級"}, {"id": 149, "code": "06-19", "cat": "06身體部位", "zh": "小腿肚", "at": "mryuw", "rmk": "mryu", "lvl": "高級"}, {"id": 150, "code": "06-20", "cat": "06身體部位", "zh": "肩膀", "at": "qhzyang", "rmk": "另作qhyang", "lvl": "中級"}, {"id": 151, "code": "06-21", "cat": "06身體部位", "zh": "下巴", "at": "qabay", "rmk": "angi", "lvl": "中級"}, {"id": 152, "code": "06-22", "cat": "06身體部位", "zh": "背部", "at": "turu", "rmk": "turu’", "lvl": "中級"}, {"id": 153, "code": "06-23", "cat": "06身體部位", "zh": "皮", "at": "kyahil", "rmk": "kyahil(動物、人) kehil", "lvl": "中級"}, {"id": 154, "code": "06-24", "cat": "06身體部位", "zh": "胸部；胸腔", "at": "skutaw", "rmk": "", "lvl": "中級"}, {"id": 155, "code": "06-25", "cat": "06身體部位", "zh": "男性生殖器(陰莖)", "at": "utas", "rmk": "bgax睪丸/utas陰莖", "lvl": "中高級"}, {"id": 156, "code": "06-26", "cat": "06身體部位", "zh": "女性生殖器", "at": "pipi", "rmk": "pipi’", "lvl": "高級"}, {"id": 157, "code": "06-27", "cat": "06身體部位", "zh": "肺", "at": "bhluk", "rmk": "hluk肺；hbluk騙人", "lvl": "中級"}, {"id": 158, "code": "06-28", "cat": "06身體部位", "zh": "心臟", "at": "yaba yuhum", "rmk": "yuhum/yaba’ bahat", "lvl": "中級"}, {"id": 159, "code": "06-29", "cat": "06身體部位", "zh": "手肘", "at": "heku/hiku", "rmk": "heku’", "lvl": "高級"}, {"id": 160, "code": "06-30", "cat": "06身體部位", "zh": "口水", "at": "tuyoq", "rmk": "tuyuq", "lvl": "中級"}, {"id": 161, "code": "06-31", "cat": "06身體部位", "zh": "膝蓋", "at": "tari", "rmk": "tari’", "lvl": "中級"}, {"id": 162, "code": "06-32", "cat": "06身體部位", "zh": "傷口", "at": "qilis", "rmk": "qelis", "lvl": "中級"}, {"id": 163, "code": "06-33", "cat": "06身體部位", "zh": "胃", "at": "kwa/ hbun", "rmk": "lhbun/kwa’胃；hbun腹部；下腹部", "lvl": "中級"}, {"id": 164, "code": "06-34", "cat": "06身體部位", "zh": "肝臟", "at": "szik", "rmk": "", "lvl": "中級"}, {"id": 165, "code": "06-35", "cat": "06身體部位", "zh": "痰", "at": "hehuy", "rmk": "horaq/asuy/asy/hrhar", "lvl": "中級"}, {"id": 166, "code": "06-36", "cat": "06身體部位", "zh": "甲狀腺腫", "at": "thruwan", "rmk": "msharu/haru", "lvl": "高級"}, {"id": 167, "code": "06-37", "cat": "06身體部位", "zh": "油脂", "at": "syam/abura", "rmk": "qnu", "lvl": "高級"}, {"id": 168, "code": "06-38", "cat": "06身體部位", "zh": "肋骨", "at": "qaraw", "rmk": "", "lvl": "中高級"}, {"id": 169, "code": "06-39", "cat": "06身體部位", "zh": "膽囊", "at": "yuhum", "rmk": "yuhul", "lvl": "高級"}, {"id": 170, "code": "06-40", "cat": "06身體部位", "zh": "拇指", "at": "kʼabaʼ tluling", "rmk": "yaba tluling/kzyaba’", "lvl": "中高級"}, {"id": 171, "code": "06-41", "cat": "06身體部位", "zh": "喉嚨", "at": "qolu", "rmk": "qolu’/qawlu’/qlwit（頸子）", "lvl": "中級"}, {"id": 172, "code": "06-42", "cat": "06身體部位", "zh": "舌頭", "at": "hmali", "rmk": "hmali’", "lvl": "中級"}, {"id": 173, "code": "06-43", "cat": "06身體部位", "zh": "腰部", "at": "hwinuk", "rmk": "hwinuk", "lvl": "中級"}, {"id": 174, "code": "06-44", "cat": "06身體部位", "zh": "手指", "at": "tluling", "rmk": "kluling", "lvl": "中級"}, {"id": 175, "code": "06-45", "cat": "06身體部位", "zh": "門牙", "at": "tatu", "rmk": "tatu’ g’nux/y’nux tatu", "lvl": "高級"}, {"id": 176, "code": "06-46", "cat": "06身體部位", "zh": "汗水", "at": "yabux", "rmk": "", "lvl": "中級"}, {"id": 177, "code": "06-47", "cat": "06身體部位", "zh": "脖子", "at": "gryung", "rmk": "", "lvl": "中級"}, {"id": 178, "code": "06-48", "cat": "06身體部位", "zh": "鼻涕", "at": "ngihi", "rmk": "ngihi’", "lvl": "中高級"}, {"id": 179, "code": "06-49", "cat": "06身體部位", "zh": "關節", "at": "mumu", "rmk": "mumu’", "lvl": "中高級"}, {"id": 180, "code": "06-50", "cat": "06身體部位", "zh": "臀部", "at": "tukah", "rmk": "bzyuk/qcyan屁股", "lvl": "中高級"}, {"id": 181, "code": "06-51", "cat": "06身體部位", "zh": "腳掌", "at": "rapal", "rmk": "", "lvl": "中高級"}, {"id": 182, "code": "06-52", "cat": "06身體部位", "zh": "後頸", "at": "qlwit", "rmk": "qolu喉嚨/qlwit後頸/qawlu’後頸/gryung頸", "lvl": "高級"}, {"id": 183, "code": "06-53", "cat": "06身體部位", "zh": "腋窩", "at": "liliq", "rmk": "", "lvl": "高級"}, {"id": 184, "code": "06-54", "cat": "06身體部位", "zh": "腎臟", "at": "tumaw", "rmk": "tocing", "lvl": "高級"}, {"id": 185, "code": "06-55", "cat": "06身體部位", "zh": "嘴唇", "at": "prahum", "rmk": "", "lvl": "中級"}, {"id": 186, "code": "06-56", "cat": "06身體部位", "zh": "毛", "at": "bukil", "rmk": "", "lvl": "中級"}, {"id": 187, "code": "07-01", "cat": "07動物(含昆蟲)", "zh": "尾巴", "at": "ngungu", "rmk": "ngungu’", "lvl": "中級"}, {"id": 188, "code": "07-02", "cat": "07動物(含昆蟲)", "zh": "豬", "at": "bzyok", "rmk": "bzywaq/bzywak", "lvl": "初級"}, {"id": 189, "code": "07-03", "cat": "07動物(含昆蟲)", "zh": "狗", "at": "huzil", "rmk": "hozil", "lvl": "初級"}, {"id": 190, "code": "07-04", "cat": "07動物(含昆蟲)", "zh": "羊", "at": "mit", "rmk": "", "lvl": "初級"}, {"id": 191, "code": "07-05", "cat": "07動物(含昆蟲)", "zh": "貓", "at": "ngyaw", "rmk": "", "lvl": "初級"}, {"id": 192, "code": "07-06", "cat": "07動物(含昆蟲)", "zh": "鳥", "at": "qbhniq", "rmk": "qhniq", "lvl": "初級"}, {"id": 193, "code": "07-07", "cat": "07動物(含昆蟲)", "zh": "魚", "at": "qulih", "rmk": "", "lvl": "初級"}, {"id": 194, "code": "07-08", "cat": "07動物(含昆蟲)", "zh": "雞", "at": "ngta", "rmk": "ngta’", "lvl": "初級"}, {"id": 195, "code": "07-09", "cat": "07動物(含昆蟲)", "zh": "猴子", "at": "yungay", "rmk": "", "lvl": "初級"}, {"id": 196, "code": "07-10", "cat": "07動物(含昆蟲)", "zh": "牛", "at": "kacing", "rmk": "", "lvl": "初級"}, {"id": 197, "code": "07-11", "cat": "07動物(含昆蟲)", "zh": "老鼠(統稱)", "at": "qoli", "rmk": "qoli’/qawli’", "lvl": "初級"}, {"id": 198, "code": "07-12", "cat": "07動物(含昆蟲)", "zh": "青蛙", "at": "qpatung", "rmk": "", "lvl": "初級"}, {"id": 199, "code": "07-13", "cat": "07動物(含昆蟲)", "zh": "貓頭鷹", "at": "nguzyaq", "rmk": "nguziq/pupuk", "lvl": "初級"}, {"id": 200, "code": "07-14", "cat": "07動物(含昆蟲)", "zh": "穿山甲", "at": "qom", "rmk": "qawm", "lvl": "中高級"}, {"id": 201, "code": "07-15", "cat": "07動物(含昆蟲)", "zh": "山豬", "at": "bzyok qnhyun", "rmk": "bzywaq qnhyun/bzywak qnhyun", "lvl": "高級"}, {"id": 202, "code": "07-16", "cat": "07動物(含昆蟲)", "zh": "野鴿子", "at": "tkara", "rmk": "tkara’", "lvl": "中高級"}, {"id": 203, "code": "07-17", "cat": "07動物(含昆蟲)", "zh": "蟲(統稱)", "at": "kumay", "rmk": "kmamay", "lvl": "中級"}, {"id": 204, "code": "07-18", "cat": "07動物(含昆蟲)", "zh": "烏龜", "at": "ksipa", "rmk": "ksipa甲魚；鱉/tkakus龜/krakus/takay", "lvl": "中級"}, {"id": 205, "code": "07-19", "cat": "07動物(含昆蟲)", "zh": "蛇", "at": "mqu", "rmk": "mqu’", "lvl": "中高級"}, {"id": 206, "code": "07-20", "cat": "07動物(含昆蟲)", "zh": "飛鼠", "at": "yapit", "rmk": "", "lvl": "中級"}, {"id": 207, "code": "07-21", "cat": "07動物(含昆蟲)", "zh": "豹", "at": "kli", "rmk": "kli’/ykli/zkli’", "lvl": "中高級"}, {"id": 208, "code": "07-22", "cat": "07動物(含昆蟲)", "zh": "水鹿", "at": "bqanux", "rmk": "qanux", "lvl": "中高級"}, {"id": 209, "code": "07-23", "cat": "07動物(含昆蟲)", "zh": "熊", "at": "ngarux", "rmk": "", "lvl": "中級"}, {"id": 210, "code": "07-24", "cat": "07動物(含昆蟲)", "zh": "山羌", "at": "para", "rmk": "para’", "lvl": "中高級"}, {"id": 211, "code": "07-25", "cat": "07動物(含昆蟲)", "zh": "蟑螂", "at": "hipux/hepux", "rmk": "", "lvl": "中高級"}, {"id": 212, "code": "07-26", "cat": "07動物(含昆蟲)", "zh": "蜻蜓", "at": "klosan", "rmk": "klawsan", "lvl": "中高級"}, {"id": 213, "code": "07-27", "cat": "07動物(含昆蟲)", "zh": "蝴蝶", "at": "kperay", "rmk": "kpiray/kpayray", "lvl": "中高級"}, {"id": 214, "code": "07-28", "cat": "07動物(含昆蟲)", "zh": "蜘蛛", "at": "kobay", "rmk": "yokay/yawkit", "lvl": "中高級"}, {"id": 215, "code": "07-29", "cat": "07動物(含昆蟲)", "zh": "雄性動物生殖器官", "at": "bgax", "rmk": "", "lvl": "高級"}, {"id": 216, "code": "07-30", "cat": "07動物(含昆蟲)", "zh": "松鼠", "at": "bhut", "rmk": "", "lvl": "中高級"}, {"id": 217, "code": "07-31", "cat": "07動物(含昆蟲)", "zh": "田鼠", "at": "kinsruyun", "rmk": "qoli’seng/qoli’ busus/qoli’ qsumuk/qoli’ sruyu/", "lvl": "中高級"}, {"id": 218, "code": "07-32", "cat": "07動物(含昆蟲)", "zh": "蚊子", "at": "kuy", "rmk": "kwi", "lvl": "中高級"}, {"id": 219, "code": "07-33", "cat": "07動物(含昆蟲)", "zh": "頭蝨", "at": "kuhing", "rmk": "equ’", "lvl": "高級"}, {"id": 220, "code": "07-34", "cat": "07動物(含昆蟲)", "zh": "蒼蠅", "at": "ngli", "rmk": "yngli/zyangaw/ngli’", "lvl": "中級"}, {"id": 221, "code": "07-35", "cat": "07動物(含昆蟲)", "zh": "蜜蜂", "at": "hzing/walu", "rmk": "", "lvl": "中級"}, {"id": 222, "code": "07-36", "cat": "07動物(含昆蟲)", "zh": "雄性(動物)", "at": "blsuy", "rmk": "blsuy(狗牛羊)/binthuk(豬)/qcingan(鹿)", "lvl": "高級"}, {"id": 223, "code": "07-37", "cat": "07動物(含昆蟲)", "zh": "乳豬", "at": "uyuk bzyok", "rmk": "biyuk bzywak", "lvl": "中高級"}, {"id": 224, "code": "07-38", "cat": "07動物(含昆蟲)", "zh": "鴨", "at": "guru", "rmk": "guru’/rugu/kawyay", "lvl": "高級"}, {"id": 225, "code": "07-39", "cat": "07動物(含昆蟲)", "zh": "蚯蚓", "at": "bisuw", "rmk": "bisu", "lvl": "中級"}, {"id": 226, "code": "07-40", "cat": "07動物(含昆蟲)", "zh": "動物的內臟", "at": "nbwas na qsinuw", "rmk": "qsahuy na qsinuw/nbwas na qsinu", "lvl": "中高級"}, {"id": 227, "code": "07-41", "cat": "07動物(含昆蟲)", "zh": "土蜂", "at": "banga", "rmk": "banga土蜂；帝王蜂", "lvl": "高級"}, {"id": 228, "code": "07-42", "cat": "07動物(含昆蟲)", "zh": "蝦", "at": "kbolung", "rmk": "bolung/kbawlung", "lvl": "中級"}, {"id": 229, "code": "07-43", "cat": "07動物(含昆蟲)", "zh": "大象", "at": "zo", "rmk": "abas", "lvl": "中高級"}, {"id": 230, "code": "07-44", "cat": "07動物(含昆蟲)", "zh": "馬", "at": "rme", "rmk": "Rme", "lvl": "中高級"}, {"id": 231, "code": "07-45", "cat": "07動物(含昆蟲)", "zh": "雌性(動物)", "at": "gipu", "rmk": "gipu(牛)/yaya(狗羊)/tnayux(豬)/laquy( 鹿)", "lvl": "中高級"}, {"id": 232, "code": "07-46", "cat": "07動物(含昆蟲)", "zh": "螃蟹", "at": "kagang", "rmk": "kmagang", "lvl": "高級"}, {"id": 233, "code": "07-47", "cat": "07動物(含昆蟲)", "zh": "蟬", "at": "ktata", "rmk": "ktata’", "lvl": "高級"}, {"id": 234, "code": "07-48", "cat": "07動物(含昆蟲)", "zh": "百步蛇", "at": "mhitung", "rmk": "mrhetung/mlhitung", "lvl": "中高級"}, {"id": 235, "code": "07-49", "cat": "07動物(含昆蟲)", "zh": "翅膀", "at": "pali", "rmk": "pali’", "lvl": "中高級"}, {"id": 236, "code": "07-50", "cat": "07動物(含昆蟲)", "zh": "蝙蝠", "at": "kyabil", "rmk": "kyabil蝙蝠；燕子", "lvl": "中高級"}, {"id": 237, "code": "07-51", "cat": "07動物(含昆蟲)", "zh": "蝸牛", "at": "masut", "rmk": "tmang/prpaq", "lvl": "高級"}, {"id": 238, "code": "07-52", "cat": "07動物(含昆蟲)", "zh": "麻雀", "at": "pzit", "rmk": "", "lvl": "中高級"}, {"id": 239, "code": "07-53", "cat": "07動物(含昆蟲)", "zh": "鍬形蟲", "at": "waqit", "rmk": "kmaya紅彩叩頭蟲", "lvl": "高級"}, {"id": 240, "code": "07-54", "cat": "07動物(含昆蟲)", "zh": "老鷹", "at": "qwali/kwali", "rmk": "", "lvl": "高級"}, {"id": 241, "code": "07-55", "cat": "07動物(含昆蟲)", "zh": "螞蟻", "at": "qtahi", "rmk": "qtahi’", "lvl": "中高級"}, {"id": 242, "code": "07-56", "cat": "07動物(含昆蟲)", "zh": "鵝", "at": "gacyo", "rmk": "gacyu/ tbabun", "lvl": "中高級"}, {"id": 243, "code": "07-57", "cat": "07動物(含昆蟲)", "zh": "水鳥", "at": "mhoyas", "rmk": "bawyas", "lvl": "高級"}, {"id": 244, "code": "07-58", "cat": "07動物(含昆蟲)", "zh": "窩巢", "at": "ubu", "rmk": "ubu’", "lvl": "中高級"}, {"id": 245, "code": "07-59", "cat": "07動物(含昆蟲)", "zh": "虎頭蜂", "at": "tryung", "rmk": "", "lvl": "高級"}, {"id": 246, "code": "07-60", "cat": "07動物(含昆蟲)", "zh": "跳蚤", "at": "qmici", "rmk": "qmici’", "lvl": "中高級"}, {"id": 247, "code": "07-61", "cat": "07動物(含昆蟲)", "zh": "眼鏡蛇", "at": "bibing/kinharu", "rmk": "kinharu’/gbzyun/tpakan", "lvl": "中高級"}, {"id": 248, "code": "07-62", "cat": "07動物(含昆蟲)", "zh": "烏鴉", "at": "cyaqung", "rmk": "", "lvl": "中高級"}, {"id": 249, "code": "07-63", "cat": "07動物(含昆蟲)", "zh": "幼犬", "at": "uyuk huzil", "rmk": "uyuk hozil", "lvl": "中高級"}, {"id": 250, "code": "07-64", "cat": "07動物(含昆蟲)", "zh": "(動物的)角", "at": "qihuy", "rmk": "qehuy", "lvl": "中高級"}, {"id": 251, "code": "07-65", "cat": "07動物(含昆蟲)", "zh": "蚱蜢", "at": "kmotung", "rmk": "ktayli’/kyaraw/kmlyang/qmlyang紅后負蝗蟲/kbakex台灣大蝗蟲", "lvl": "中高級"}, {"id": 252, "code": "08-01", "cat": "08植物", "zh": "香蕉", "at": "guquh/buquh", "rmk": "", "lvl": "中級"}, {"id": 253, "code": "08-02", "cat": "08植物", "zh": "稻穀", "at": "pagay", "rmk": "", "lvl": "中級"}, {"id": 254, "code": "08-03", "cat": "08植物", "zh": "樹", "at": "qhuniq", "rmk": "qhoniq", "lvl": "高級"}, {"id": 255, "code": "08-04", "cat": "08植物", "zh": "芋頭", "at": "sehuy", "rmk": "sayhuy", "lvl": "中級"}, {"id": 256, "code": "08-05", "cat": "08植物", "zh": "甘蔗", "at": "bilus", "rmk": "", "lvl": "中級"}, {"id": 257, "code": "08-06", "cat": "08植物", "zh": "葉子", "at": "abaw", "rmk": "lbak", "lvl": "中級"}, {"id": 258, "code": "08-07", "cat": "08植物", "zh": "甘藷", "at": "ngahi", "rmk": "ngahi’", "lvl": "高級"}, {"id": 259, "code": "08-08", "cat": "08植物", "zh": "柑橘", "at": "yutak", "rmk": "mulu", "lvl": "中級"}, {"id": 260, "code": "08-09", "cat": "08植物", "zh": "花朵", "at": "phpah", "rmk": "", "lvl": "高級"}, {"id": 261, "code": "08-10", "cat": "08植物", "zh": "南瓜", "at": "qabang", "rmk": "", "lvl": "中高級"}, {"id": 262, "code": "08-11", "cat": "08植物", "zh": "雜草", "at": "kʼman", "rmk": "", "lvl": "中高級"}, {"id": 263, "code": "08-12", "cat": "08植物", "zh": "玉米", "at": "qitun/qetun", "rmk": "qcyay", "lvl": "高級"}, {"id": 264, "code": "08-13", "cat": "08植物", "zh": "檳榔", "at": "pinlang", "rmk": "binro", "lvl": "中高級"}, {"id": 265, "code": "08-14", "cat": "08植物", "zh": "竹子", "at": "ruma", "rmk": "rrima", "lvl": "高級"}, {"id": 266, "code": "08-15", "cat": "08植物", "zh": "樹枝", "at": "qara", "rmk": "qara’/qara qhuniq", "lvl": "高級"}, {"id": 267, "code": "08-16", "cat": "08植物", "zh": "(植物的)果實", "at": "bway", "rmk": "", "lvl": "中高級"}, {"id": 268, "code": "08-17", "cat": "08植物", "zh": "竹筍", "at": "ali", "rmk": "ali’", "lvl": "中級"}, {"id": 269, "code": "08-18", "cat": "08植物", "zh": "香菇", "at": "tqinuw", "rmk": "tqenuw/tqinu", "lvl": "高級"}, {"id": 270, "code": "08-19", "cat": "08植物", "zh": "鳳梨", "at": "pngran", "rmk": "qluhiy", "lvl": "高級"}, {"id": 271, "code": "08-20", "cat": "08植物", "zh": "草", "at": "kʼman", "rmk": "", "lvl": "高級"}, {"id": 272, "code": "08-21", "cat": "08植物", "zh": "藤類", "at": "wahiy", "rmk": "", "lvl": "高級"}, {"id": 273, "code": "08-22", "cat": "08植物", "zh": "桃子", "at": "qwirux/bukil", "rmk": "qzmux/qzimux", "lvl": "中高級"}, {"id": 274, "code": "08-23", "cat": "08植物", "zh": "李子", "at": "kaway", "rmk": "momo’", "lvl": "高級"}, {"id": 275, "code": "08-24", "cat": "08植物", "zh": "水果", "at": "bway qhuniq", "rmk": "bway pinbahu/bway", "lvl": "高級"}, {"id": 276, "code": "08-25", "cat": "08植物", "zh": "樹頭", "at": "tqzing", "rmk": "", "lvl": "高級"}, {"id": 277, "code": "08-26", "cat": "08植物", "zh": "木耳", "at": "qlung", "rmk": "", "lvl": "中高級"}, {"id": 278, "code": "08-27", "cat": "08植物", "zh": "蕃茄", "at": "warang", "rmk": "tomato(日語借詞)", "lvl": "高級"}, {"id": 279, "code": "08-28", "cat": "08植物", "zh": "樹根", "at": "gamil", "rmk": "", "lvl": "中高級"}, {"id": 280, "code": "08-29", "cat": "08植物", "zh": "野百合", "at": "boxi", "rmk": "boxi’/phpah qenu’ uru", "lvl": "中高級"}, {"id": 281, "code": "08-30", "cat": "08植物", "zh": "姑婆芋", "at": "bgayaw", "rmk": "gayaw", "lvl": "中級"}, {"id": 282, "code": "08-31", "cat": "08植物", "zh": "胡瓜", "at": "thbu", "rmk": "thbu’", "lvl": "高級"}, {"id": 283, "code": "08-32", "cat": "08植物", "zh": "山蘇", "at": "ryuhing", "rmk": "gruhing/qwihing", "lvl": "中高級"}, {"id": 284, "code": "08-33", "cat": "08植物", "zh": "胡蘿蔔", "at": "topu talah", "rmk": "sepu talah/ tawpu’ mtalah/thotaw talah", "lvl": "高級"}, {"id": 285, "code": "08-34", "cat": "08植物", "zh": "空心菜", "at": "ramat qelun/ramat qilun", "rmk": "tbihi mkawa", "lvl": "高級"}, {"id": 286, "code": "08-35", "cat": "08植物", "zh": "長豆", "at": "bolu", "rmk": "bolu’/qerang qroyux/bawlu’", "lvl": "中高級"}, {"id": 287, "code": "08-36", "cat": "08植物", "zh": "綠豆", "at": "layan mtasiq", "rmk": "sukay/sukay layan", "lvl": "中高級"}, {"id": 288, "code": "08-37", "cat": "08植物", "zh": "麥", "at": "mugi", "rmk": "mugi’", "lvl": "高級"}, {"id": 289, "code": "08-38", "cat": "08植物", "zh": "蔥", "at": "qinuw", "rmk": "qinu/nigi蔥/qenuw路喬", "lvl": "中高級"}, {"id": 290, "code": "08-39", "cat": "08植物", "zh": "豆芽", "at": "tangu layan", "rmk": "tangu’ layan/tanguw qerang/balit", "lvl": "高級"}, {"id": 291, "code": "08-40", "cat": "08植物", "zh": "百香果", "at": "hbulun", "rmk": "tokeso/khbulun/tmuka’/hbunun", "lvl": "高級"}, {"id": 292, "code": "08-41", "cat": "08植物", "zh": "山藥", "at": "sakuw", "rmk": "qgahul/saku", "lvl": "中高級"}, {"id": 293, "code": "08-42", "cat": "08植物", "zh": "檜木", "at": "qparung utux", "rmk": "", "lvl": "高級"}, {"id": 294, "code": "08-43", "cat": "08植物", "zh": "幼苗", "at": "ʼnga pagay", "rmk": "pbhogan/knawr pagay/’nga苗/’nga pagay秧苗", "lvl": "中高級"}, {"id": 295, "code": "08-44", "cat": "08植物", "zh": "種子", "at": "ghap", "rmk": "", "lvl": "中高級"}, {"id": 296, "code": "08-45", "cat": "08植物", "zh": "野草莓", "at": "biluk", "rmk": "giluk/ gwiluk", "lvl": "中高級"}, {"id": 297, "code": "08-46", "cat": "08植物", "zh": "梅子", "at": "bhziq", "rmk": "bnhziq", "lvl": "高級"}, {"id": 298, "code": "08-47", "cat": "08植物", "zh": "過貓", "at": "giri", "rmk": "giri’/giri’ talah", "lvl": "高級"}, {"id": 299, "code": "08-48", "cat": "08植物", "zh": "山櫻花", "at": "lapaw", "rmk": "qzimux", "lvl": "高級"}, {"id": 300, "code": "08-49", "cat": "08植物", "zh": "咬人貓", "at": "sqi", "rmk": "hsqi/ haysga’", "lvl": "高級"}, {"id": 301, "code": "08-50", "cat": "08植物", "zh": "山胡椒", "at": "maqaw", "rmk": "maqaw", "lvl": "高級"}, {"id": 302, "code": "08-51", "cat": "08植物", "zh": "樹豆", "at": "singut", "rmk": "", "lvl": "高級"}, {"id": 303, "code": "08-52", "cat": "08植物", "zh": "柚子", "at": "yabung", "rmk": "tlahi/bahu/baka/rahu’（古語）/muhing（酸）/yabung（甜；改良種）", "lvl": "中高級"}, {"id": 304, "code": "08-53", "cat": "08植物", "zh": "菸草", "at": "tbaku", "rmk": "thaku/abaw tutwoh", "lvl": "中高級"}, {"id": 305, "code": "08-54", "cat": "08植物", "zh": "辣椒(通稱)", "at": "qurip meloh", "rmk": "qurip muyaw/qurip paris", "lvl": "中級"}, {"id": 306, "code": "08-55", "cat": "08植物", "zh": "棉花", "at": "sbus", "rmk": "", "lvl": "高級"}, {"id": 307, "code": "08-56", "cat": "08植物", "zh": "地瓜", "at": "ngahi", "rmk": "ngahi’", "lvl": "初級"}, {"id": 308, "code": "08-57", "cat": "08植物", "zh": "番石榴", "at": "sebwal", "rmk": "zybwal/pwar", "lvl": "初級"}, {"id": 309, "code": "09-01", "cat": "09物品(不含食品)", "zh": "書", "at": "biru", "rmk": "biru’", "lvl": "初級"}, {"id": 310, "code": "09-02", "cat": "09物品(不含食品)", "zh": "錢", "at": "pila", "rmk": "pila’", "lvl": "初級"}, {"id": 311, "code": "09-03", "cat": "09物品(不含食品)", "zh": "球", "at": "mari", "rmk": "mari’", "lvl": "初級"}, {"id": 312, "code": "09-04", "cat": "09物品(不含食品)", "zh": "桌子", "at": "hanray", "rmk": "lalan", "lvl": "初級"}, {"id": 313, "code": "09-05", "cat": "09物品(不含食品)", "zh": "電話", "at": "renwa", "rmk": "qnawan/ringwa’", "lvl": "初級"}, {"id": 314, "code": "09-06", "cat": "09物品(不含食品)", "zh": "筆", "at": "enpit", "rmk": "bbiru/ inpit", "lvl": "初級"}, {"id": 315, "code": "09-07", "cat": "09物品(不含食品)", "zh": "椅子", "at": "thekan", "rmk": "thikan", "lvl": "初級"}, {"id": 316, "code": "09-08", "cat": "09物品(不含食品)", "zh": "藥物", "at": "iyu", "rmk": "iyung/sehu/yung/zyu’", "lvl": "初級"}, {"id": 317, "code": "09-09", "cat": "09物品(不含食品)", "zh": "電腦", "at": "tennaw", "rmk": "ttlingan", "lvl": "初級"}, {"id": 318, "code": "09-10", "cat": "09物品(不含食品)", "zh": "雨傘", "at": "ruku", "rmk": "rruku/ruku’/luku", "lvl": "初級"}, {"id": 319, "code": "09-11", "cat": "09物品(不含食品)", "zh": "手錶", "at": "toke", "rmk": "sspngan qba/tuki’", "lvl": "初級"}, {"id": 320, "code": "09-12", "cat": "09物品(不含食品)", "zh": "鐘錶", "at": "toke", "rmk": "sspngan qnhyang/tuki’", "lvl": "高級"}, {"id": 321, "code": "09-13", "cat": "09物品(不含食品)", "zh": "鉤子", "at": "krong", "rmk": "rrong/rawng/qzyan掛勾", "lvl": "中級"}, {"id": 322, "code": "09-14", "cat": "09物品(不含食品)", "zh": "細線", "at": "wayay", "rmk": "", "lvl": "高級"}, {"id": 323, "code": "09-15", "cat": "09物品(不含食品)", "zh": "繩索", "at": "gasil", "rmk": "", "lvl": "中級"}, {"id": 324, "code": "09-16", "cat": "09物品(不含食品)", "zh": "針", "at": "rom", "rmk": "", "lvl": "中級"}, {"id": 325, "code": "09-17", "cat": "09物品(不含食品)", "zh": "木杵", "at": "qszyu", "rmk": "qnyu/qszyu’", "lvl": "中級"}, {"id": 326, "code": "09-18", "cat": "09物品(不含食品)", "zh": "枝條", "at": "qara", "rmk": "qata", "lvl": "高級"}, {"id": 327, "code": "09-19", "cat": "09物品(不含食品)", "zh": "篩子", "at": "ggiran/bluku", "rmk": "hhazi", "lvl": "高級"}, {"id": 328, "code": "09-20", "cat": "09物品(不含食品)", "zh": "小刀", "at": "buli", "rmk": "buli’", "lvl": "高級"}, {"id": 329, "code": "09-21", "cat": "09物品(不含食品)", "zh": "船隻", "at": "qasu", "rmk": "qasu’", "lvl": "高級"}, {"id": 330, "code": "09-22", "cat": "09物品(不含食品)", "zh": "剪刀", "at": "qatap", "rmk": "qarip", "lvl": "中高級"}, {"id": 331, "code": "09-23", "cat": "09物品(不含食品)", "zh": "木炭", "at": "bagah", "rmk": "", "lvl": "高級"}, {"id": 332, "code": "09-24", "cat": "09物品(不含食品)", "zh": "水桶", "at": "baket", "rmk": "bakit", "lvl": "中高級"}, {"id": 333, "code": "09-25", "cat": "09物品(不含食品)", "zh": "釣竿", "at": "boyaw", "rmk": "boyaw qulih", "lvl": "中高級"}, {"id": 334, "code": "09-26", "cat": "09物品(不含食品)", "zh": "竹筒", "at": "btakan", "rmk": "", "lvl": "高級"}, {"id": 335, "code": "09-27", "cat": "09物品(不含食品)", "zh": "電燈", "at": "renki/ppilaw", "rmk": "rengki’（外來語)/rintu’", "lvl": "高級"}, {"id": 336, "code": "09-28", "cat": "09物品(不含食品)", "zh": "蓋子", "at": "umuk", "rmk": "", "lvl": "中級"}, {"id": 337, "code": "09-29", "cat": "09物品(不含食品)", "zh": "(竹製的)刮麻具", "at": "qsap", "rmk": "", "lvl": "中高級"}, {"id": 338, "code": "09-30", "cat": "09物品(不含食品)", "zh": "污垢", "at": "kalat", "rmk": "", "lvl": "中高級"}, {"id": 339, "code": "09-31", "cat": "09物品(不含食品)", "zh": "木臼", "at": "bluhung", "rmk": "luhung", "lvl": "高級"}, {"id": 340, "code": "09-32", "cat": "09物品(不含食品)", "zh": "棉被", "at": "tapang", "rmk": "", "lvl": "高級"}, {"id": 341, "code": "09-33", "cat": "09物品(不含食品)", "zh": "碗", "at": "pyatu", "rmk": "pyatu’", "lvl": "中級"}, {"id": 342, "code": "09-34", "cat": "09物品(不含食品)", "zh": "網子", "at": "tara", "rmk": "tara’", "lvl": "高級"}, {"id": 343, "code": "09-35", "cat": "09物品(不含食品)", "zh": "飯鍋", "at": "kyawan", "rmk": "kama’/pawlu", "lvl": "高級"}, {"id": 344, "code": "09-36", "cat": "09物品(不含食品)", "zh": "鋸子", "at": "hrhil", "rmk": "hrhil", "lvl": "中級"}, {"id": 345, "code": "09-37", "cat": "09物品(不含食品)", "zh": "紙張", "at": "brbar", "rmk": "brbar", "lvl": "中高級"}, {"id": 346, "code": "09-38", "cat": "09物品(不含食品)", "zh": "杯子", "at": "qhzi/kopu", "rmk": "qhziy", "lvl": "中高級"}, {"id": 347, "code": "09-39", "cat": "09物品(不含食品)", "zh": "釣具", "at": "nyep", "rmk": "", "lvl": "高級"}, {"id": 348, "code": "09-40", "cat": "09物品(不含食品)", "zh": "袋子", "at": "yubing", "rmk": "", "lvl": "高級"}, {"id": 349, "code": "09-41", "cat": "09物品(不含食品)", "zh": "鍋鏟", "at": "qibuw", "rmk": "qebuw/qibu", "lvl": "中高級"}, {"id": 350, "code": "09-42", "cat": "09物品(不含食品)", "zh": "斧頭", "at": "yasam", "rmk": "yasam putut", "lvl": "中級"}, {"id": 351, "code": "09-43", "cat": "09物品(不含食品)", "zh": "夾子", "at": "qqway", "rmk": "", "lvl": "中高級"}, {"id": 352, "code": "09-44", "cat": "09物品(不含食品)", "zh": "床舖", "at": "sakaw", "rmk": "", "lvl": "中級"}, {"id": 353, "code": "09-45", "cat": "09物品(不含食品)", "zh": "梗", "at": "quru", "rmk": "quru’/mumu", "lvl": "中高級"}, {"id": 354, "code": "09-46", "cat": "09物品(不含食品)", "zh": "鏡子", "at": "kita/kkita", "rmk": "kkita klihaw/kkita’", "lvl": "中高級"}, {"id": 355, "code": "09-47", "cat": "09物品(不含食品)", "zh": "工具", "at": "qeqaya", "rmk": "qeqaya’/qayqaya’", "lvl": "中高級"}, {"id": 356, "code": "09-48", "cat": "09物品(不含食品)", "zh": "弧形(底)鍋", "at": "supih", "rmk": "supih sa’ing", "lvl": "高級"}, {"id": 357, "code": "09-49", "cat": "09物品(不含食品)", "zh": "炭灰", "at": "qbuli", "rmk": "qbuli’", "lvl": "中高級"}, {"id": 358, "code": "09-50", "cat": "09物品(不含食品)", "zh": "瓶子", "at": "yuyut", "rmk": "", "lvl": "高級"}, {"id": 359, "code": "09-51", "cat": "09物品(不含食品)", "zh": "湯匙", "at": "ngabih", "rmk": "ngawbih", "lvl": "中高級"}, {"id": 360, "code": "09-52", "cat": "09物品(不含食品)", "zh": "菜盤", "at": "sara", "rmk": "sara’", "lvl": "中高級"}, {"id": 361, "code": "09-53", "cat": "09物品(不含食品)", "zh": "相片", "at": "syasing", "rmk": "", "lvl": "高級"}, {"id": 362, "code": "09-54", "cat": "09物品(不含食品)", "zh": "肥皂", "at": "sekeng", "rmk": "siking", "lvl": "中級"}, {"id": 363, "code": "09-55", "cat": "09物品(不含食品)", "zh": "濾酒渣網", "at": "sisiy", "rmk": "gitu", "lvl": "中級"}, {"id": 364, "code": "09-56", "cat": "09物品(不含食品)", "zh": "梳子", "at": "heluk", "rmk": "hiluk", "lvl": "中級"}, {"id": 365, "code": "09-57", "cat": "09物品(不含食品)", "zh": "揹帶(包包的帶子)", "at": "wakil", "rmk": "", "lvl": "中高級"}, {"id": 366, "code": "09-58", "cat": "09物品(不含食品)", "zh": "扇子", "at": "tgtap", "rmk": "ttabus/zzyup", "lvl": "中高級"}, {"id": 367, "code": "09-59", "cat": "09物品(不含食品)", "zh": "湯鍋", "at": "kluban", "rmk": "", "lvl": "中高級"}, {"id": 368, "code": "09-60", "cat": "09物品(不含食品)", "zh": "水瓢(舀水用)", "at": "taku", "rmk": "taku’", "lvl": "中級"}, {"id": 369, "code": "09-61", "cat": "09物品(不含食品)", "zh": "電冰箱", "at": "tepinsyang", "rmk": "kulu hlqyan/tenpinsyang", "lvl": "中高級"}, {"id": 370, "code": "09-62", "cat": "09物品(不含食品)", "zh": "電視", "at": "teribi", "rmk": "terebi/tribi/tensi’", "lvl": "高級"}, {"id": 371, "code": "09-63", "cat": "09物品(不含食品)", "zh": "水管", "at": "takan qsya/gomu", "rmk": "takan qsya’/gumu’", "lvl": "中高級"}, {"id": 372, "code": "09-64", "cat": "09物品(不含食品)", "zh": "枕頭", "at": "tnuxan", "rmk": "", "lvl": "中級"}, {"id": 373, "code": "09-65", "cat": "09物品(不含食品)", "zh": "鐵鎚", "at": "ttucing", "rmk": "", "lvl": "高級"}, {"id": 374, "code": "09-66", "cat": "09物品(不含食品)", "zh": "鐵釘", "at": "kugi", "rmk": "kugi’/thetang/pasing/sasu", "lvl": "中高級"}, {"id": 375, "code": "09-67", "cat": "09物品(不含食品)", "zh": "卡在牙縫之物", "at": "pqaya g’nux", "rmk": "qqaya’/lingas/tqaya", "lvl": "中高級"}, {"id": 376, "code": "09-68", "cat": "09物品(不含食品)", "zh": "菜刀", "at": "hocyo", "rmk": "hucyu", "lvl": "高級"}, {"id": 377, "code": "09-69", "cat": "09物品(不含食品)", "zh": "魚網", "at": "tara", "rmk": "taha", "lvl": "中級"}, {"id": 378, "code": "09-70", "cat": "09物品(不含食品)", "zh": "橡皮擦", "at": "ssom", "rmk": "", "lvl": "初級"}, {"id": 379, "code": "09-71", "cat": "09物品(不含食品)", "zh": "簍子(魚簍)", "at": "takil", "rmk": "", "lvl": "初級"}, {"id": 380, "code": "10-01", "cat": "10山川地理", "zh": "道路", "at": "tuqi/tuqiy", "rmk": "", "lvl": "中級"}, {"id": 381, "code": "10-02", "cat": "10山川地理", "zh": "山林", "at": "hlahuy", "rmk": "lhlahuy", "lvl": "初級"}, {"id": 382, "code": "10-03", "cat": "10山川地理", "zh": "小溪", "at": "gong", "rmk": "", "lvl": "初級"}, {"id": 383, "code": "10-04", "cat": "10山川地理", "zh": "風", "at": "behuy", "rmk": "bayhuy", "lvl": "中級"}, {"id": 384, "code": "10-05", "cat": "10山川地理", "zh": "沙子", "at": "naqiy/bnaqiy", "rmk": "bnaqi", "lvl": "高級"}, {"id": 385, "code": "10-06", "cat": "10山川地理", "zh": "泥土", "at": "uraw", "rmk": "", "lvl": "中級"}, {"id": 386, "code": "10-07", "cat": "10山川地理", "zh": "河流", "at": "llyung", "rmk": "lyung", "lvl": "中級"}, {"id": 387, "code": "10-08", "cat": "10山川地理", "zh": "湖泊", "at": "bsilung", "rmk": "langu水塘；積水處/bsilung湖泊/pitung池塘/lubung水塘", "lvl": "中高級"}, {"id": 388, "code": "10-09", "cat": "10山川地理", "zh": "森林", "at": "hlahuy", "rmk": "", "lvl": "中級"}, {"id": 389, "code": "10-10", "cat": "10山川地理", "zh": "縫隙", "at": "gasuq", "rmk": "ngahaw/ngisoq/ngsuq", "lvl": "中級"}, {"id": 390, "code": "10-11", "cat": "10山川地理", "zh": "洞穴", "at": "bling", "rmk": "", "lvl": "中級"}, {"id": 391, "code": "10-12", "cat": "10山川地理", "zh": "山腳下", "at": "klbing", "rmk": "", "lvl": "中高級"}, {"id": 392, "code": "10-13", "cat": "10山川地理", "zh": "土堆", "at": "ʼntwan uraw", "rmk": "’ntwan", "lvl": "中高級"}, {"id": 393, "code": "10-14", "cat": "10山川地理", "zh": "岩洞", "at": "lxyux", "rmk": "", "lvl": "高級"}, {"id": 394, "code": "10-15", "cat": "10山川地理", "zh": "草原", "at": "m’ma k’man", "rmk": "mema’/m’ma’ kima/qnahi k’man", "lvl": "高級"}, {"id": 395, "code": "10-16", "cat": "10山川地理", "zh": "溫泉", "at": "ulay", "rmk": "tngtung", "lvl": "高級"}, {"id": 396, "code": "10-17", "cat": "10山川地理", "zh": "峽谷", "at": "uruw rgyax", "rmk": "", "lvl": "高級"}, {"id": 397, "code": "10-18", "cat": "10山川地理", "zh": "山洞", "at": "bling", "rmk": "", "lvl": "高級"}, {"id": 398, "code": "10-19", "cat": "10山川地理", "zh": "岩石", "at": "btunux", "rmk": "", "lvl": "高級"}, {"id": 399, "code": "10-20", "cat": "10山川地理", "zh": "瀑布", "at": "tgliq", "rmk": "", "lvl": "中高級"}, {"id": 400, "code": "10-21", "cat": "10山川地理", "zh": "獨立的小山頭", "at": "tbuci na b’bu", "rmk": "qutux hlahuy bbu rgyax/ tbuci’ ru cikuy b’bu’ na rgyax/bu’ rgyax", "lvl": "高級"}, {"id": 401, "code": "10-22", "cat": "10山川地理", "zh": "崇山峻嶺", "at": "rgrgyax", "rmk": "nergyax", "lvl": "高級"}];
+
+let activeMode = 0; // 0: 翻牌, 1: 看族語說中文, 2: 看中文說族語, 3: 朗讀自測
+let filteredPool = [];
+
+// MODE 1 翻牌狀態
+let flipCards = [];
+let flippedIndices = [];
+let matchedCount = 0;
+let flipClicks = 0;
+let flipLock = false;
+
+// MODE 2 & 3 測驗狀態
+let quizQuestions = [];
+let quizIdx = 0;
+let quizScore = 0;
+
+// MODE 4 自測狀態
+let flashQuestions = [];
+let flashIdx = 0;
+let flashAtFirst = true; // true: 看族語說中文, false: 看中文說族語
+
+// 初始化選單
+function initApp() {
+  const cats = Array.from(new Set(VOCAB_DATA.map(d => d.cat)));
+  const select = document.getElementById('catSelect');
+  cats.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    select.appendChild(opt);
+  });
+  onFilterChange();
+}
+
+function onFilterChange() {
+  const cat = document.getElementById('catSelect').value;
+  const lvl = document.getElementById('levelSelect').value;
+
+  filteredPool = VOCAB_DATA.filter(item => {
+    const mCat = (cat === 'ALL' || item.cat === cat);
+    const mLvl = (lvl === 'ALL' || item.lvl === lvl);
+    return mCat && mLvl;
+  });
+
+  if (filteredPool.length < 4) {
+    alert('此篩選條件下的單詞量不足 4 個，已重設為全部級別。');
+    document.getElementById('levelSelect').value = 'ALL';
+    filteredPool = VOCAB_DATA.filter(item => (cat === 'ALL' || item.cat === cat));
+  }
+
+  // 重新依當前模式啟動遊戲
+  switchMode(activeMode);
+}
+
+function switchMode(modeIndex) {
+  activeMode = modeIndex;
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`tab-${i}`).classList.toggle('active', i === modeIndex);
+  }
+
+  document.getElementById('mode-flip').classList.toggle('hidden', modeIndex !== 0);
+  document.getElementById('mode-quiz').classList.toggle('hidden', modeIndex !== 1 && modeIndex !== 2);
+  document.getElementById('mode-flash').classList.toggle('hidden', modeIndex !== 3);
+
+  if (modeIndex === 0) {
+    initFlipGame();
+  } else if (modeIndex === 1 || modeIndex === 2) {
+    startQuiz();
+  } else if (modeIndex === 3) {
+    initFlashcards();
+  }
+}
+
+// 隨機選取 N 個題目工具函式
+function getRandomQuestions(pool, count) {
+  const shuffled = [...pool].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
+/* =========================================================
+   模式 1: 翻牌練習測驗 (隨機 10 題配對，共 20 張牌)
+   ========================================================= */
+function initFlipGame() {
+  const grid = document.getElementById('flip-grid');
+  grid.innerHTML = '';
+  document.getElementById('flip-end').classList.add('hidden');
+  grid.classList.remove('hidden');
+
+  flippedIndices = [];
+  matchedCount = 0;
+  flipClicks = 0;
+  flipLock = false;
+  document.getElementById('flip-matches').innerText = '0';
+  document.getElementById('flip-clicks').innerText = '0';
+
+  // 隨機抽選 10 題
+  const selected = getRandomQuestions(filteredPool, 10);
+  let cards = [];
+  selected.forEach(item => {
+    cards.push({ id: item.id, type: 'at', text: item.at, code: item.code });
+    cards.push({ id: item.id, type: 'zh', text: item.zh, code: item.code });
+  });
+
+  // 洗牌
+  cards.sort(() => 0.5 - Math.random());
+  flipCards = cards;
+
+  cards.forEach((c, idx) => {
+    const slot = document.createElement('div');
+    slot.className = 'card-slot';
+    slot.id = `flip-${idx}`;
+    slot.innerHTML = `
+      <div class="flip-inner">
+        <div class="face face-front">?</div>
+        <div class="face face-back">
+          <span class="tag-pill ${c.type === 'at' ? 'tag-at' : 'tag-zh'}">${c.type === 'at' ? '族語' : '中文'}</span>
+          <div class="card-term">${c.text}</div>
+        </div>
+      </div>
+    `;
+    slot.onclick = () => onCardClick(idx);
+    grid.appendChild(slot);
+  });
+}
+
+function onCardClick(idx) {
+  if (flipLock) return;
+  const slot = document.getElementById(`flip-${idx}`);
+  if (slot.classList.contains('flipped') || slot.classList.contains('matched')) return;
+
+  slot.classList.add('flipped');
+  flippedIndices.push(idx);
+  flipClicks++;
+  document.getElementById('flip-clicks').innerText = flipClicks;
+
+  if (flippedIndices.length === 2) {
+    flipLock = true;
+    const [i1, i2] = flippedIndices;
+    const c1 = flipCards[i1];
+    const c2 = flipCards[i2];
+
+    const isMatch = (c1.id === c2.id && c1.type !== c2.type);
+    if (isMatch) {
+      setTimeout(() => {
+        document.getElementById(`flip-${i1}`).classList.add('matched');
+        document.getElementById(`flip-${i2}`).classList.add('matched');
+        flippedIndices = [];
+        flipLock = false;
+        matchedCount++;
+        document.getElementById('flip-matches').innerText = matchedCount;
+        if (matchedCount === 10) {
+          document.getElementById('flip-grid').classList.add('hidden');
+          document.getElementById('flip-end').classList.remove('hidden');
+          document.getElementById('flip-final-clicks').innerText = flipClicks;
+        }
+      }, 350);
+    } else {
+      setTimeout(() => {
+        document.getElementById(`flip-${i1}`).classList.remove('flipped');
+        document.getElementById(`flip-${i2}`).classList.remove('flipped');
+        flippedIndices = [];
+        flipLock = false;
+      }, 850);
+    }
+  }
+}
+
+/* =========================================================
+   模式 2 & 3: 選擇題測驗 (每次隨機 10 題，看族語說中文 / 看中文說族語)
+   ========================================================= */
+function startQuiz() {
+  quizQuestions = getRandomQuestions(filteredPool, 10);
+  quizIdx = 0;
+  quizScore = 0;
+
+  document.getElementById('quiz-ongoing').classList.remove('hidden');
+  document.getElementById('quiz-result').classList.add('hidden');
+  document.getElementById('quiz-score').innerText = '0';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (quizIdx >= quizQuestions.length) {
+    document.getElementById('quiz-ongoing').classList.add('hidden');
+    document.getElementById('quiz-result').classList.remove('hidden');
+    document.getElementById('quiz-final-score').innerText = `${quizScore} 分`;
+    return;
+  }
+
+  document.getElementById('quiz-num').innerText = quizIdx + 1;
+  document.getElementById('btn-next-question').style.display = 'none';
+
+  const cur = quizQuestions[quizIdx];
+  const isAt2Zh = (activeMode === 1);
+
+  document.getElementById('quiz-prompt-text').innerText = isAt2Zh
+    ? '【看泰雅族語】選出正確的中文含意：'
+    : '【看中文】選出正確的泰雅族語：';
+  document.getElementById('quiz-question').innerText = isAt2Zh ? cur.at : cur.zh;
+
+  // 隨機選 3 個干擾項 (自全部 401 題中挑選不同詞)
+  const distractors = VOCAB_DATA.filter(d => d.id !== cur.id)
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 3);
+  const choices = [...distractors, cur].sort(() => 0.5 - Math.random());
+
+  const optContainer = document.getElementById('quiz-options');
+  optContainer.innerHTML = '';
+  choices.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerText = isAt2Zh ? ch.zh : ch.at;
+    btn.onclick = () => onAnswer(btn, ch.id === cur.id);
+    optContainer.appendChild(btn);
+  });
+}
+
+function onAnswer(clickedBtn, isCorrect) {
+  const allBtns = document.querySelectorAll('.opt-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  const cur = quizQuestions[quizIdx];
+  const isAt2Zh = (activeMode === 1);
+  const correctText = isAt2Zh ? cur.zh : cur.at;
+
+  if (isCorrect) {
+    clickedBtn.classList.add('correct');
+    quizScore += 10;
+    document.getElementById('quiz-score').innerText = quizScore;
+  } else {
+    clickedBtn.classList.add('wrong');
+    allBtns.forEach(b => {
+      if (b.innerText === correctText) b.classList.add('correct');
+    });
+  }
+
+  document.getElementById('btn-next-question').style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  quizIdx++;
+  renderQuestion();
+}
+
+/* =========================================================
+   模式 4: 朗讀翻面自測 (隨機 10 題，大字卡翻面)
+   ========================================================= */
+function initFlashcards() {
+  flashQuestions = getRandomQuestions(filteredPool, 10);
+  flashIdx = 0;
+  updateFlashUI();
+}
+
+function toggleFlashcard() {
+  document.getElementById('flashcard-box').classList.toggle('flipped');
+}
+
+function toggleFlashPrompt() {
+  flashAtFirst = !flashAtFirst;
+  document.getElementById('btn-fc-toggle').innerText = flashAtFirst ? '切換：看族語說中文' : '切換：看中文說族語';
+  updateFlashUI();
+}
+
+function updateFlashUI() {
+  document.getElementById('flashcard-box').classList.remove('flipped');
+  if (flashQuestions.length === 0) return;
+
+  const cur = flashQuestions[flashIdx];
+  document.getElementById('flash-num').innerText = flashIdx + 1;
+
+  if (flashAtFirst) {
+    document.getElementById('fc-front-tip').innerText = '【看族語 ‧ 請發音並試念中文】';
+    document.getElementById('fc-front-word').innerText = cur.at;
+
+    document.getElementById('fc-back-tip').innerText = '【中文涵義】';
+    document.getElementById('fc-back-word').innerText = cur.zh;
+  } else {
+    document.getElementById('fc-front-tip').innerText = '【看中文 ‧ 請口說發音出泰雅語】';
+    document.getElementById('fc-front-word').innerText = cur.zh;
+
+    document.getElementById('fc-back-tip').innerText = '【泰雅族語】';
+    document.getElementById('fc-back-word').innerText = cur.at;
+  }
+}
+
+function prevFlash() {
+  if (flashQuestions.length === 0) return;
+  flashIdx = (flashIdx - 1 + flashQuestions.length) % flashQuestions.length;
+  updateFlashUI();
+}
+
+function nextFlash() {
+  if (flashQuestions.length === 0) return;
+  flashIdx = (flashIdx + 1) % flashQuestions.length;
+  updateFlashUI();
+}
+
+// 頁面載入完成立即啟動
+window.onload = initApp;
+</script>
+</body>
+</html>
